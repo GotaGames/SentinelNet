@@ -26,4 +26,5 @@ public class Servidor {
     public String toString() {
         return nome + " (" + ipInterno + ")";
     }
+
 }
