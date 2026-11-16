@@ -1,8 +1,8 @@
 package view;
 
-import dao.*;
+import dao.RequisicaoDAO;
 import model.Requisicao;
-import model.Servidor;
+import service.ServicoProcessamento;
 
 import javax.swing.*;
 import javax.swing.text.*;
@@ -13,21 +13,26 @@ public class JanelaProcessamento extends JFrame {
 
     private JTextPane consola;
     private StyledDocument doc;
+    private JLabel lblContadores;
     private RequisicaoDAO requisicaoDAO = new RequisicaoDAO();
-    private LogDAO logDAO = new LogDAO();
-    private ServidorDAO servidorDAO = new ServidorDAO();
-    private AlertaDAO alertaDAO = new AlertaDAO();
+    private ServicoProcessamento servico = new ServicoProcessamento();
+    private int total = 0, permitidas = 0, bloqueadas = 0, isolamentos = 0, alertas = 0;
 
     public JanelaProcessamento() {
         setTitle("Sentinel Net - Motor de Processamento");
-        setSize(700, 500);
+        setSize(800, 550);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
+        lblContadores = new JLabel("Processadas: 0 | Permitidas: 0 | Bloqueadas: 0 | Isolamentos: 0 | Alertas: 0");
+        lblContadores.setFont(new Font("SansSerif", Font.BOLD, 13));
+        lblContadores.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        add(lblContadores, BorderLayout.NORTH);
+
         consola = new JTextPane();
         consola.setEditable(false);
-        consola.setBackground(new Color(20, 20, 20));
+        consola.setBackground(new Color(15, 15, 15));
         consola.setForeground(Color.WHITE);
         consola.setFont(new Font("Monospaced", Font.PLAIN, 12));
         doc = consola.getStyledDocument();
@@ -45,60 +50,20 @@ public class JanelaProcessamento extends JFrame {
             StyleConstants.setForeground(attrs, cor);
             doc.insertString(doc.getLength(), texto, attrs);
             consola.setCaretPosition(doc.getLength());
-        } catch (BadLocationException e) {
-            e.printStackTrace();
-        }
+        } catch (BadLocationException e) { e.printStackTrace(); }
     }
 
     private void processarPendentes() {
         List<Requisicao> pendentes = requisicaoDAO.listarPendentes();
         for (Requisicao r : pendentes) {
-            int idServidor = encontrarIdServidorPorNome(r.getServidorDestinoNome());
-            String estadoServidor = servidorDAO.estadoDoServidor(idServidor);
-
-            int risco;
-            String resultado;
-
-            if (estadoServidor.equals("Isolado")) {
-                risco = 10;
-                resultado = "BLOQUEADA (Servidor Isolado)";
-                requisicaoDAO.atualizarEstado(r.getIdRequisicao(), "Bloqueada");
-                escrever("[ISOLADO] " + r.getAcaoSolicitada() + " -> " + r.getServidorDestinoNome() + " (risco 10)\n", Color.RED);
-            } else if (estadoServidor.equals("Sob Suspeita")) {
-                risco = 8;
-                resultado = "BLOQUEADA (Servidor Sob Suspeita)";
-                requisicaoDAO.atualizarEstado(r.getIdRequisicao(), "Bloqueada");
-                escrever("[SUSPEITO] " + r.getAcaoSolicitada() + " -> " + r.getServidorDestinoNome() + " (risco 8)\n", Color.ORANGE);
-            } else if (r.getAcaoSolicitada().equals("DownloadMassivo") || r.getAcaoSolicitada().equals("AlterarPrivilegio")) {
-                risco = 9;
-                resultado = "BLOQUEADA (Ação Crítica)";
-                requisicaoDAO.atualizarEstado(r.getIdRequisicao(), "Bloqueada");
-                escrever("[CRÍTICO] " + r.getAcaoSolicitada() + " -> " + r.getServidorDestinoNome() + " (risco 9)\n", Color.RED);
-            } else {
-                risco = 2;
-                resultado = "PERMITIDA";
-                requisicaoDAO.atualizarEstado(r.getIdRequisicao(), "Permitida");
-                escrever("[OK] " + r.getAcaoSolicitada() + " -> " + r.getServidorDestinoNome() + " (risco 2)\n", Color.GREEN);
-            }
-
-            Integer idLogPai = logDAO.ultimoLogDoServidor(idServidor);
-            int idLogGerado = logDAO.inserirLog(idServidor, r.getIdRequisicao(), resultado, risco, idLogPai);
-
-            if (risco >= 8) {
-                alertaDAO.enviarAlerta(idLogGerado, 1, "SMS", "Critico");
-                alertaDAO.enviarAlerta(idLogGerado, 2, "Email", "Critico");
-                alertaDAO.enviarAlerta(idLogGerado, 1, "Painel_Web", "Critico");
-                escrever("   >> ALERTA CRÍTICO enviado a Ana Silva (SMS) e Bruno Costa (Email)\n", Color.MAGENTA);
-            } else if (risco >= 5) {
-                alertaDAO.enviarAlerta(idLogGerado, 1, "Painel_Web", "Suspeita");
-                escrever("   >> ALERTA DE SUSPEITA registado no painel\n", Color.YELLOW);
-            }
+            String resultado = servico.processar(r);
+            total++;
+            if (resultado.contains("PERMITIDA")) permitidas++;
+            else if (resultado.contains("ISOLADO") || resultado.contains("ISOLAMENTO")) { bloqueadas++; isolamentos++; alertas += 3; escrever(resultado + "\n", Color.RED); }
+            else if (resultado.contains("SUSPEITO")) { bloqueadas++; alertas++; escrever(resultado + "\n", Color.ORANGE); }
+            else escrever(resultado + "\n", Color.GREEN);
         }
-    }
-
-    private int encontrarIdServidorPorNome(String nome) {
-        List<Servidor> servidores = servidorDAO.listarTodos();
-        for (Servidor s : servidores) if (s.getNome().equals(nome)) return s.getIdServidor();
-        return 0;
+        lblContadores.setText("Processadas: " + total + " | Permitidas: " + permitidas +
+                " | Bloqueadas: " + bloqueadas + " | Isolamentos: " + isolamentos + " | Alertas: " + alertas);
     }
 }
