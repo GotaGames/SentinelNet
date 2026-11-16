@@ -34,11 +34,28 @@ public class ServidorDAO {
         String sql = "UPDATE servidor SET status_atual = ? WHERE id_servidor = ?";
         try (Connection conn = ConexaoBD.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+            conn.setAutoCommit(true);
             stmt.setString(1, novoStatus);
             stmt.setInt(2, idServidor);
-            stmt.executeUpdate();
+            int linhasAfetadas = stmt.executeUpdate();
+            System.out.println("UPDATE executado. Linhas afetadas: " + linhasAfetadas);
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+
+    public String estadoDoServidor(int idServidor) {
+        String sql = "SELECT status_atual FROM servidor WHERE id_servidor = ?";
+        try (Connection conn = ConexaoBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idServidor);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getString("status_atual");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "Ativo";
     }
 }
