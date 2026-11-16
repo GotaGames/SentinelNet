@@ -58,4 +58,28 @@ public class ServidorDAO {
         }
         return "Ativo";
     }
+
+    public int criticidadeDoServidor(int idServidor) {
+        String sql = "SELECT nivel_criticidade FROM servidor WHERE id_servidor = ?";
+        try (Connection conn = ConexaoPool.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idServidor);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getInt("nivel_criticidade");
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 1;
+    }
+
+    public String nomeDoServidor(int idServidor) {
+        String sql = "SELECT nome FROM servidor WHERE id_servidor = ?";
+        try (Connection conn = ConexaoPool.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idServidor);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getString("nome");
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return "";
+    }
 }
