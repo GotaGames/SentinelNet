@@ -60,13 +60,10 @@ A aplicação liga-se ao MySQL local do XAMPP através do driver JDBC MySQL Conn
 - MySQL Connector/J (driver JDBC).
 - Git para clonar o repositório.
 
-Tens razão, ficou genérico. Vou dar-te a secção completa com o procedimento real de clonagem do GitHub, incluindo os comandos, a configuração do IntelliJ, e a resolução de problemas comuns.
 
 ## 6. Clonar o Projeto
 
 ### 6.1 Pré-requisitos para clonar
-
-Antes de começar, confirma que tens instalado:
 
 - Git. Para verificar, abre o terminal e executa `git --version`. Se não aparecer a versão, instala o Git a partir de https://git-scm.com/downloads.
 - IntelliJ IDEA.
@@ -135,7 +132,7 @@ cd sentinel-net
 git pull origin main
 ```
 
-Se houver conflitos, o Git vai avisar. Nesse caso, abre os ficheiros em conflito, resolve manualmente as diferenças, e depois executa:
+Se houver conflitos, o Git vai avisar. Nesse caso, abra os ficheiros em conflito, resolva manualmente as diferenças, e depois executa:
 
 ```bash
 git add .
