@@ -549,7 +549,7 @@ O modelo de dados foi aprovado pelo docente e não deve ser alterado sem autoriz
 
 Projeto desenvolvido no âmbito da disciplina de Base de Dados 1.
 
-- **Nomes:** Gota, Denzel; Vilanculos, Widson; Cossa, Alberto; Mithe, Cleyton; Valoi, Kishua; Lepeque, Octavio.
+- **Nomes:** Gota, Denzel; Vilanculos, Widson; Cossa, Alberto; Mithe, Cleyton.
 - **Instituição:** Universidade Eduardo Mondlane, Departamento de Eletrotecnia, Licenciatura em Engenharia Informatica - Pos-laboral, 2 Ano.
 - **Ano:** 2026
 
